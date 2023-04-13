@@ -22,15 +22,15 @@
  * @param _type the type of the task
  * @param _baseType the base type from which the _task inherits.
  */
-#define BLF_REGISTER_TASK(_type, _baseType)                   \
+#define BLF_REGISTER_TASK(_type, _baseType, _factory)         \
     static std::shared_ptr<_baseType> _type##FactoryBuilder() \
     {                                                         \
         return std::make_shared<_type>();                     \
     };                                                        \
                                                               \
     static std::string _type##BuilderAutoRegHook              \
-        = ::BipedalLocomotion::System::ILinearTaskFactory<    \
-            _baseType>::registerBuilder(#_type, _type##FactoryBuilder);
+        = _factory::registerBuilder(#_type, _type##FactoryBuilder);
+
 
 namespace BipedalLocomotion
 {

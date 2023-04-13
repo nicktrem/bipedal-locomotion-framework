@@ -12,3 +12,5 @@ bool IKLinearTask::setKinDyn(std::shared_ptr<iDynTree::KinDynComputations> kinDy
 {
     return true;
 }
+
+IKLinearTaskFactory::IKLinearTaskFactory() = default;

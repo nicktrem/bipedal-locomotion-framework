@@ -13,12 +13,6 @@
 
 #include <iDynTree/KinDynComputations.h>
 
-/**
- * BLF_REGISTER_IK_TASK is a macro that can be used to register an IKLinearTask. The key of the
- * task will be the stringified version of the Task C++ Type
- * @param _type the type of the task
- */
-#define BLF_REGISTER_IK_TASK(_type) BLF_REGISTER_TASK(_type, ::BipedalLocomotion::IK::IKLinearTask)
 
 namespace BipedalLocomotion
 {
@@ -40,9 +34,19 @@ struct IKLinearTask : public BipedalLocomotion::System::LinearTask
     virtual bool setKinDyn(std::shared_ptr<iDynTree::KinDynComputations> kinDyn);
 };
 
-using IKLinearTaskFactory = ::BipedalLocomotion::System::ILinearTaskFactory<IKLinearTask>;
+struct IKLinearTaskFactory : public ::BipedalLocomotion::System::ILinearTaskFactory<IKLinearTask>
+{
+    IKLinearTaskFactory();
+};
 
 } // namespace IK
 } // namespace BipedalLocomotion
+
+/**
+ * BLF_REGISTER_IK_TASK is a macro that can be used to register an IKLinearTask. The key of the
+ * task will be the stringified version of the Task C++ Type
+ * @param _type the type of the task
+ */
+#define BLF_REGISTER_IK_TASK(_type) BLF_REGISTER_TASK(_type, ::BipedalLocomotion::IK::IKLinearTask, ::BipedalLocomotion::IK::IKLinearTaskFactory)
 
 #endif // BIPEDAL_LOCOMOTION_SYSTEM_IK_LINEAR_TASK_H
