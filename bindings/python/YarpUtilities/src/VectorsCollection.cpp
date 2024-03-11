@@ -75,6 +75,10 @@ void CreateVectorsCollectionClient(pybind11::module& module)
              [](VectorsCollectionClient& impl, bool shouldWait) -> std::map<std::string, std::vector<double>>
              {
                 BipedalLocomotion::YarpUtilities::VectorsCollection* collection = impl.readData(shouldWait);
+                if (!shouldWait && collection == nullptr)
+                {
+                  return std::map<std::string, std::vector<double>>();
+                }
                 return collection->vectors;
              });
 }
