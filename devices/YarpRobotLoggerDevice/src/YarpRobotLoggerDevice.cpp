@@ -1139,7 +1139,7 @@ void YarpRobotLoggerDevice::lookForExogenousSignals()
                 if (!signal.client.areMetadataReady())
                 {
                   log()->info("[YarpRobotLoggerDevice::lookForExogenousSignals] The metadata are not ready");
-                  signal.connected = false;
+                  signal.disconnect();
                   continue;
                 }
 
