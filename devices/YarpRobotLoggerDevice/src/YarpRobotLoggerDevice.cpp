@@ -1136,6 +1136,12 @@ void YarpRobotLoggerDevice::lookForExogenousSignals()
                 log()->info("[YarpRobotLoggerDevice::lookForExogenousSignals] Attempt to get the "
                             "metadata for the vectors collection signal named: {}",
                             name);
+                if (!signal.client.areMetadataReady())
+                {
+                  log()->info("[YarpRobotLoggerDevice::lookForExogenousSignals] The metadata are not ready");
+                  signal.connected = false;
+                  continue;
+                }
 
                 if (!signal.client.getMetadata(signal.metadata))
                 {

@@ -73,6 +73,12 @@ public:
     bool getMetadata(BipedalLocomotion::YarpUtilities::VectorsCollectionMetadata& metadata);
 
     /**
+     * Check if the metadata is ready by using the rpc interface
+     * @return true if the metadata is ready, false otherwise.
+     */
+    bool areMetadataReady();
+
+    /**
      * Read the data from the port.
      * @param shouldWait if true the function will wait until the data is available.
      * @return a pointer to the VectorsCollection. The ownership of the pointer is controlled by the

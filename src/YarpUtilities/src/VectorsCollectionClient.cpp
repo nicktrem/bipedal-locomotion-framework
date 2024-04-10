@@ -9,6 +9,7 @@
 #include <BipedalLocomotion/YarpUtilities/VectorsCollectionClient.h>
 #include <BipedalLocomotion/YarpUtilities/VectorsCollectionMetadataService.h>
 
+#include <cwchar>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/Port.h>
@@ -153,6 +154,18 @@ bool VectorsCollectionClient::getMetadata(
 
     metadata = m_pimpl->rpcInterface.getMetadata();
     return true;
+}
+
+bool VectorsCollectionClient::areMetadataReady()
+{
+    if (!m_pimpl->isConnected)
+    {
+        log()->error("[VectorsCollectionClient::areMetadataReady] Please call connect before asking "
+                     "for the metadata");
+        return false;
+    }
+
+    return m_pimpl->rpcInterface.areMetadataReady();
 }
 
 BipedalLocomotion::YarpUtilities::VectorsCollection*
