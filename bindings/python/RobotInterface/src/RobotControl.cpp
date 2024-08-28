@@ -5,6 +5,8 @@
  * distributed under the terms of the BSD-3-Clause license.
  */
 
+#include <optional>
+
 #include <pybind11/eigen.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -65,15 +67,20 @@ void CreateYarpRobotControl(pybind11::module& module)
              })
         .def("set_references",
              py::overload_cast<Eigen::Ref<const Eigen::VectorXd>,
-                               const std::vector<IRobotControl::ControlMode>&>(
+                               const std::vector<IRobotControl::ControlMode>&,
+                               std::optional<Eigen::Ref<const Eigen::VectorXd>>>(
                  &YarpRobotControl::setReferences),
-             py::arg("joints_value"),
-             py::arg("control_modes"))
+             py::arg("desired_joints_value"),
+             py::arg("control_modes"),
+             py::arg("current_joint_values") = std::nullopt)
         .def("set_references",
-             py::overload_cast<Eigen::Ref<const Eigen::VectorXd>, const IRobotControl::ControlMode&>(
+             py::overload_cast<Eigen::Ref<const Eigen::VectorXd>,
+                               const IRobotControl::ControlMode&,
+                               std::optional<Eigen::Ref<const Eigen::VectorXd>>>(
                  &YarpRobotControl::setReferences),
-             py::arg("joints_value"),
-             py::arg("control_mode"))
+             py::arg("desired_joints_value"),
+             py::arg("control_mode"),
+             py::arg("current_joint_values") = std::nullopt)
         .def("set_control_mode",
              py::overload_cast<const std::vector<IRobotControl::ControlMode>&>(
                  &YarpRobotControl::setControlMode),
@@ -83,7 +90,14 @@ void CreateYarpRobotControl(pybind11::module& module)
                  &YarpRobotControl::setControlMode),
              py::arg("control_mode"))
         .def("get_joint_list", &YarpRobotControl::getJointList)
-        .def("is_valid", &YarpRobotControl::isValid);
+        .def("is_valid", &YarpRobotControl::isValid)
+        .def("get_joint_limits", [](YarpRobotControl& impl) {
+            Eigen::VectorXd lowerLimits, upperLimits;
+            lowerLimits.resize(impl.getJointList().size());
+            upperLimits.resize(impl.getJointList().size());
+            bool ok = impl.getJointLimits(lowerLimits, upperLimits);
+            return std::make_tuple(ok, lowerLimits, upperLimits);
+        });
 }
 
 } // namespace RobotInterface

@@ -15,7 +15,7 @@
 #include <BipedalLocomotion/YarpUtilities/VectorsCollection.h>
 #include <BipedalLocomotion/YarpUtilities/VectorsCollectionMetadata.h>
 
-#include <iDynTree/Core/Span.h>
+#include <iDynTree/Span.h>
 
 namespace BipedalLocomotion
 {
@@ -71,12 +71,6 @@ public:
      * @return true if the metadata has been retrieved successfully, false otherwise.
      */
     bool getMetadata(BipedalLocomotion::YarpUtilities::VectorsCollectionMetadata& metadata);
-
-    /**
-     * Check if the metadata is ready by using the rpc interface
-     * @return true if the metadata is ready, false otherwise.
-     */
-    bool areMetadataReady();
 
     /**
      * Read the data from the port.

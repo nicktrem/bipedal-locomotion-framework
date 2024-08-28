@@ -9,9 +9,7 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
-#include <vector>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -55,12 +53,18 @@ public:
     virtual void run() final;
 
 private:
+    std::chrono::nanoseconds m_previousTimestamp;
+    std::chrono::nanoseconds m_acceptableStep{std::chrono::nanoseconds::max()};
+    bool m_firstRun{true};
+
     using ft_t = Eigen::Matrix<double, 6, 1>;
     using gyro_t = Eigen::Matrix<double, 3, 1>;
     using accelerometer_t = Eigen::Matrix<double, 3, 1>;
     using orientation_t = Eigen::Matrix<double, 3, 1>;
     using magnemetometer_t = Eigen::Matrix<double, 3, 1>;
     using analog_sensor_t = Eigen::Matrix<double, 12, 1>;
+
+    const unsigned int maxTimeoutForExogenousSignal = 1000;
 
     std::unique_ptr<BipedalLocomotion::RobotInterface::YarpSensorBridge> m_robotSensorBridge;
     std::unique_ptr<BipedalLocomotion::RobotInterface::YarpCameraBridge> m_cameraBridge;
@@ -77,7 +81,7 @@ private:
         std::string signalName;
         yarp::os::BufferedPort<T> port;
         bool dataArrived{false};
-        bool connected{false};
+        std::atomic<bool> connected{false};
 
         bool connect()
         {
@@ -99,17 +103,18 @@ private:
         BipedalLocomotion::YarpUtilities::VectorsCollectionClient client;
         BipedalLocomotion::YarpUtilities::VectorsCollectionMetadata metadata;
         std::string signalName;
-        unsigned int numMissedPackets;
         bool dataArrived{false};
-        bool connected{false};
+        std::atomic<bool> connected{false};
+        unsigned int numMissedPackets;
 
         bool connect();
         void disconnect();
     };
+    
+    unsigned int m_updatedMetadataSignalVal;
 
     std::unordered_map<std::string, VectorsCollectionSignal> m_vectorsCollectionSignals;
     std::unordered_map<std::string, ExogenousSignal<yarp::sig::Vector>> m_vectorSignals;
-    unsigned int m_updatedMetadataSignalVal;
 
     std::unordered_set<std::string> m_exogenousPortsStoredInManager;
     std::atomic<bool> m_lookForNewExogenousSignalIsRunning{false};
@@ -164,6 +169,7 @@ private:
 
     bool m_streamMotorStates{false};
     bool m_streamJointStates{false};
+    bool m_streamJointAccelerations{true};
     bool m_streamMotorPWM{false};
     bool m_streamPIDs{false};
     bool m_streamInertials{false};
@@ -174,25 +180,14 @@ private:
     std::vector<std::string> m_codeStatusCmdPrefixes;
 
     std::mutex m_bufferManagerMutex;
-    std::mutex m_textLoggingPortMutex;
     robometry::BufferManager m_bufferManager;
 
     void lookForNewLogs();
     void lookForExogenousSignals();
 
-    bool
-    addChannelAndMetadata(const std::string& nameKey, const std::vector<std::string>& metadata);
-    void storeAndSendLoggingData(const std::string& name,
-                                 const Eigen::VectorXd& data,
-                                 const double time);
-    bool addChannel(const std::string& nameKey, const std::vector<std::string>& metadata);
-    void storeLoggingData(const std::string& name,
-                                 const Eigen::VectorXd& data,
-                                 const double time);
-    bool (BipedalLocomotion::YarpRobotLoggerDevice::*initMetadataFunction)(const std::string& nameKey, const std::vector<std::string>& metadata);
-    void (BipedalLocomotion::YarpRobotLoggerDevice::*loggingDataFunction)(const std::string& name,
-                                 const Eigen::VectorXd& data,
-                                 const double time);
+    bool addChannel(const std::string& nameKey,
+                    std::size_t vectorSize,
+                    const std::vector<std::string>& metadata = {});
 
     bool hasSubstring(const std::string& str, const std::vector<std::string>& substrings) const;
     void recordVideo(const std::string& cameraName, VideoWriter& writer);
@@ -214,8 +209,6 @@ private:
     bool createFramesFolder(std::shared_ptr<VideoWriter::ImageSaver> imageSaver,
                             const std::string& camera,
                             const std::string& imageType);
-
-    const unsigned int maxTimoutForExogenousSignal = 1000;
 
     const std::string treeDelim = "::";
 
@@ -242,7 +235,7 @@ private:
     const std::vector<std::string> gyroElementNames = {"omega_x", "omega_y", "omega_z"};
 
     const std::string accelerometersName = "accelerometers";
-    const std::vector<std::string> AccelerometerElementNames = {"a_x", "a_y", "a_z"};
+    const std::vector<std::string> accelerometerElementNames = {"a_x", "a_y", "a_z"};
 
     const std::string orientationsName = "orientations";
     const std::vector<std::string> orientationElementNames = {"r", "p", "y"};
@@ -252,11 +245,11 @@ private:
 
     const std::string cartesianWrenchesName = "cartesian_wrenches";
     const std::vector<std::string> cartesianWrenchNames = {ftElementNames[0],
-                                                        ftElementNames[1],
-                                                        ftElementNames[2],
-                                                        ftElementNames[3],
-                                                        ftElementNames[4],
-                                                        ftElementNames[5]};
+                                                           ftElementNames[1],
+                                                           ftElementNames[2],
+                                                           ftElementNames[3],
+                                                           ftElementNames[4],
+                                                           ftElementNames[5]};
 
     const std::string temperatureName = "temperatures";
     const std::vector<std::string> temperatureNames = {"temperature"};
@@ -269,6 +262,5 @@ private:
 };
 
 } // namespace BipedalLocomotion
-
 
 #endif // BIPEDAL_LOCOMOTION_FRAMEWORK_YARP_ROBOT_LOGGER_DEVICE_H
