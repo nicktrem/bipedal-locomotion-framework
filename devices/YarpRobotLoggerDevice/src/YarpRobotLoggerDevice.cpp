@@ -1716,12 +1716,16 @@ void YarpRobotLoggerDevice::run()
             }
         }
     }
-    Eigen::Matrix<double, 1, 1> newMetadataVector;
-    if(newMetadata)
-        m_updatedMetadataSignalVal = (m_updatedMetadataSignalVal + 1) % 2;
-    newMetadataVector << m_updatedMetadataSignalVal;
+    if (m_sendDataRT)
+    {
 
-    m_vectorCollectionRTDataServer.populateData(robotRtRootName + treeDelim + "newMetadata", newMetadataVector);
+        Eigen::Matrix<double, 1, 1> newMetadataVector;
+        if(newMetadata)
+            m_updatedMetadataSignalVal = (m_updatedMetadataSignalVal + 1) % 2;
+        newMetadataVector << m_updatedMetadataSignalVal;
+
+        m_vectorCollectionRTDataServer.populateData(robotRtRootName + treeDelim + "newMetadata", newMetadataVector);
+    }
 
     for (auto& [name, signal] : m_vectorSignals)
     {
